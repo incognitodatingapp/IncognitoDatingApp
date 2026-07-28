@@ -3,20 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AnonMatch API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User profile operations
+  - name: posts
+    description: Public feed operations
+  - name: match
+    description: Matching and chat operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +29,549 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+    put:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /users/me/avatar:
+    post:
+      operationId: uploadAvatar
+      tags: [users]
+      summary: Upload profile picture
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AvatarUpload"
+      responses:
+        "200":
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvatarUploadResult"
+        "401":
+          description: Unauthorized
+
+  /users/me/stats:
+    get:
+      operationId: getMyStats
+      tags: [users]
+      summary: Get current user statistics
+      responses:
+        "200":
+          description: User statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+        "401":
+          description: Unauthorized
+
+  /posts:
+    get:
+      operationId: listPosts
+      tags: [posts]
+      summary: Get public feed posts
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: ["integer", "null"]
+          description: Cursor for pagination (last post id)
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+          description: Number of posts to return (default 20)
+      responses:
+        "200":
+          description: Feed posts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostList"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createPost
+      tags: [posts]
+      summary: Create a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "401":
+          description: Unauthorized
+
+  /posts/{id}:
+    delete:
+      operationId: deletePost
+      tags: [posts]
+      summary: Delete a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Post deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /posts/{id}/image:
+    post:
+      operationId: uploadPostImage
+      tags: [posts]
+      summary: Upload image for a post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/ImageUpload"
+      responses:
+        "200":
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImageUploadResult"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+  /match/search:
+    post:
+      operationId: startSearch
+      tags: [match]
+      summary: Start searching for a chat partner
+      responses:
+        "200":
+          description: Search status or match found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResult"
+        "400":
+          description: Already in active chat
+        "401":
+          description: Unauthorized
+    delete:
+      operationId: cancelSearch
+      tags: [match]
+      summary: Cancel current search
+      responses:
+        "204":
+          description: Search cancelled
+        "401":
+          description: Unauthorized
+
+  /match/current:
+    get:
+      operationId: getCurrentMatch
+      tags: [match]
+      summary: Get current match state
+      responses:
+        "200":
+          description: Current match state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchState"
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active match
+    delete:
+      operationId: endChat
+      tags: [match]
+      summary: End current chat
+      responses:
+        "204":
+          description: Chat ended
+        "401":
+          description: Unauthorized
+
+  /match/current/messages:
+    get:
+      operationId: listMessages
+      tags: [match]
+      summary: Get messages in current match
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageList"
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active match
+    post:
+      operationId: sendMessage
+      tags: [match]
+      summary: Send a message in current match
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active match
+
+  /match/current/reveal:
+    post:
+      operationId: requestReveal
+      tags: [match]
+      summary: Request or confirm mutual reveal
+      responses:
+        "200":
+          description: Reveal state updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevealResult"
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active match
+
+  /match/history:
+    get:
+      operationId: getMatchHistory
+      tags: [match]
+      summary: Get ended matches history
+      responses:
+        "200":
+          description: Match history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchHistoryList"
+        "401":
+          description: Unauthorized
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    User:
+      type: object
+      required: [id, clerkId, displayName, isVip, isOnline, isSearching, createdAt]
+      properties:
+        id:
+          type: number
+        clerkId:
+          type: string
+        displayName:
+          type: string
+        username:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        isVip:
+          type: boolean
+        isOnline:
+          type: boolean
+        isSearching:
+          type: boolean
+        createdAt:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        username:
+          type: string
+        bio:
+          type: string
+
+    UserStats:
+      type: object
+      required: [totalChats, totalMessages, totalReveals, postsCount]
+      properties:
+        totalChats:
+          type: number
+        totalMessages:
+          type: number
+        totalReveals:
+          type: number
+        postsCount:
+          type: number
+
+    AvatarUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+
+    AvatarUploadResult:
+      type: object
+      required: [avatarUrl]
+      properties:
+        avatarUrl:
+          type: string
+
+    Post:
+      type: object
+      required: [id, authorId, authorDisplayName, content, isBlurred, createdAt]
+      properties:
+        id:
+          type: number
+        authorId:
+          type: number
+        authorDisplayName:
+          type: string
+        authorAvatarUrl:
+          type: ["string", "null"]
+        content:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isBlurred:
+          type: boolean
+        isOwn:
+          type: boolean
+        createdAt:
+          type: string
+
+    PostList:
+      type: object
+      required: [posts, hasMore]
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Post"
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: ["number", "null"]
+
+    PostInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    ImageUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+
+    ImageUploadResult:
+      type: object
+      required: [imageUrl]
+      properties:
+        imageUrl:
+          type: string
+
+    SearchResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [searching, matched]
+        match:
+          $ref: "#/components/schemas/MatchState"
+
+    MatchState:
+      type: object
+      required: [id, partnerId, partnerDisplayName, myMessageCount, partnerMessageCount, myRevealRequested, partnerRevealRequested, isRevealed, status, createdAt]
+      properties:
+        id:
+          type: number
+        partnerId:
+          type: number
+        partnerDisplayName:
+          type: string
+        partnerAvatarUrl:
+          type: ["string", "null"]
+        myMessageCount:
+          type: number
+        partnerMessageCount:
+          type: number
+        myRevealRequested:
+          type: boolean
+        partnerRevealRequested:
+          type: boolean
+        isRevealed:
+          type: boolean
+        status:
+          type: string
+          enum: [active, ended]
+        createdAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+
+    Message:
+      type: object
+      required: [id, matchId, senderId, content, isMine, createdAt]
+      properties:
+        id:
+          type: number
+        matchId:
+          type: number
+        senderId:
+          type: number
+        content:
+          type: string
+        isMine:
+          type: boolean
+        createdAt:
+          type: string
+
+    MessageList:
+      type: object
+      required: [messages, hasMore]
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: ["number", "null"]
+
+    MessageInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    RevealResult:
+      type: object
+      required: [myRevealRequested, partnerRevealRequested, isRevealed]
+      properties:
+        myRevealRequested:
+          type: boolean
+        partnerRevealRequested:
+          type: boolean
+        isRevealed:
+          type: boolean
+
+    MatchHistoryItem:
+      type: object
+      required: [id, partnerDisplayName, myMessageCount, partnerMessageCount, isRevealed, createdAt]
+      properties:
+        id:
+          type: number
+        partnerDisplayName:
+          type: string
+        partnerAvatarUrl:
+          type: ["string", "null"]
+        myMessageCount:
+          type: number
+        partnerMessageCount:
+          type: number
+        isRevealed:
+          type: boolean
+        createdAt:
+          type: string
+        endedAt:
+          type: ["string", "null"]
+
+    MatchHistoryList:
+      type: object
+      required: [matches]
+      properties:
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchHistoryItem"

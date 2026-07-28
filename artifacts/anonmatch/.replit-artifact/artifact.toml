@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "AnonMatch"
+version = "1.0.0"
+id = "artifacts/anonmatch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19310
+
+[services.development]
+run = "pnpm --filter @workspace/anonmatch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/anonmatch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/anonmatch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19310"
+BASE_PATH = "/"

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <path d="M50 20 C20 20 5 50 5 50 C5 50 20 80 50 80 C80 80 95 50 95 50 C95 50 80 20 50 20 Z" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="50" cy="50" r="15" fill="#06B6D4" opacity="0.8">
+    <animate attributeName="r" values="15;17;15" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <path d="M50 35 A15 15 0 0 1 65 50" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M10 50 L90 50" stroke="#0a0a0f" stroke-width="8" opacity="0.5" />
+</svg>

@@ -1,0 +1,3 @@
+- [OpenAPI integer vs number](openapi-integer-number.md) — Use `type: number` not `type: integer` in openapi.yaml; Orval v8 generates `zod.int()` for integers which is Zod v4-only but workspace pins Zod v3.
+- [WS proxy routing](ws-proxy-routing.md) — WebSocket path must appear in artifact.toml `paths` array alongside REST path or proxy silently drops WS upgrades.
+- [DB lib rebuild order](db-lib-rebuild.md) — After adding schema files to lib/db, run `pnpm run typecheck:libs` before checking artifact typecheck or exports appear missing.
