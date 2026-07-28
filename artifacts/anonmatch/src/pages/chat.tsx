@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "@clerk/react";
-import { Link } from "wouter";
 import { 
   useStartSearch, 
   useCancelSearch, 
@@ -15,7 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useQueryClient } from "@tanstack/react-query";
-import { Send, Search, X, UserX, Unlock, Loader2, Info } from "lucide-react";
+import { Send, Search, X, UserX, Unlock, Loader2, Info, Eye } from "lucide-react";
 import { format } from "date-fns";
 
 export default function ChatPage() {
@@ -174,10 +173,123 @@ export default function ChatPage() {
 
 import { useGetMe } from "@workspace/api-client-react";
 
+// Blur level at each milestone
+const MILESTONE_BLUR: Record<number, number> = { 5: 14, 10: 9, 20: 5, 50: 0 };
+const MILESTONES = [5, 10, 20, 50];
+
+type AugmentedItem =
+  | { kind: "message"; data: any }
+  | { kind: "milestone"; milestone: number; blurPx: number; partnerAvatarUrl?: string; partnerDisplayName?: string }
+  | { kind: "reveal"; partnerAvatarUrl?: string; partnerDisplayName?: string };
+
+function MilestoneCard({ item }: { item: Extract<AugmentedItem, { kind: "milestone" }> }) {
+  const label =
+    item.milestone >= 50
+      ? "Half a century of words 🔥"
+      : item.milestone >= 20
+      ? "Trust is building fast..."
+      : item.milestone >= 10
+      ? "Getting clearer..."
+      : "The fog is lifting...";
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-6 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Glowing ring around avatar */}
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-xl scale-150" />
+        <div
+          className="relative w-20 h-20 rounded-full border-2 border-purple-500/60 overflow-hidden transition-all duration-[1200ms] ease-in-out shadow-[0_0_30px_rgba(139,92,246,0.4)]"
+          style={{ filter: `blur(${item.blurPx}px)` }}
+        >
+          {item.partnerAvatarUrl ? (
+            <img src={item.partnerAvatarUrl} alt="Partner" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-2xl font-bold text-zinc-400">?</div>
+          )}
+        </div>
+        {/* milestone badge */}
+        <div className="absolute -bottom-1 -right-1 bg-purple-600 text-white text-[10px] font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-[#0a0a0f] shadow-lg">
+          {item.milestone}
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-cyan-400 text-sm font-semibold tracking-wide">{label}</p>
+        <p className="text-zinc-500 text-xs mt-0.5">{item.milestone} messages unlocked a new level</p>
+      </div>
+      <div className="h-px w-24 bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
+    </div>
+  );
+}
+
+function RevealCard({ item }: { item: Extract<AugmentedItem, { kind: "reveal" }> }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-8 px-4 animate-in fade-in zoom-in-95 duration-700">
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-cyan-500/30 blur-2xl scale-150 animate-pulse" />
+        <div className="relative w-24 h-24 rounded-full border-2 border-cyan-400 overflow-hidden shadow-[0_0_40px_rgba(6,182,212,0.6)]">
+          {item.partnerAvatarUrl ? (
+            <img src={item.partnerAvatarUrl} alt="Partner" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-3xl font-bold text-zinc-300">
+              {item.partnerDisplayName?.[0]?.toUpperCase() ?? "?"}
+            </div>
+          )}
+        </div>
+        <div className="absolute -bottom-1 -right-1 bg-cyan-500 text-white rounded-full w-7 h-7 flex items-center justify-center border-2 border-[#0a0a0f] shadow-lg">
+          <Eye size={14} />
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-cyan-300 text-base font-bold tracking-wide">
+          {item.partnerDisplayName ? `${item.partnerDisplayName} revealed` : "Both revealed!"}
+        </p>
+        <p className="text-zinc-500 text-xs mt-1">The masks are off. You can see each other now.</p>
+      </div>
+      <div className="h-px w-32 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+    </div>
+  );
+}
+
 function ChatContent({ matchData, onStart, onCancel, onEnd, onSend, onReveal, inputContent, setInputContent, localMessages, messagesEndRef, calculateBlur }: any) {
   const { data: me } = useGetMe();
   const isSearching = me?.isSearching;
   const isMatched = matchData && matchData.status === MatchStateStatus.active;
+
+  // Build augmented timeline with milestone avatar cards injected after the Nth sent message
+  const augmentedMessages = useMemo<AugmentedItem[]>(() => {
+    if (!isMatched) return [];
+    const result: AugmentedItem[] = [];
+    let myCount = 0;
+    const shownMilestones = new Set<number>();
+
+    for (const msg of localMessages) {
+      result.push({ kind: "message", data: msg });
+      if (msg.isMine) {
+        myCount++;
+        if (MILESTONES.includes(myCount) && !shownMilestones.has(myCount)) {
+          shownMilestones.add(myCount);
+          result.push({
+            kind: "milestone",
+            milestone: myCount,
+            blurPx: MILESTONE_BLUR[myCount],
+            partnerAvatarUrl: matchData.partnerAvatarUrl,
+            partnerDisplayName: matchData.partnerDisplayName,
+          });
+        }
+      }
+    }
+
+    // Append a reveal card at the end if mutually revealed
+    if (matchData.isRevealed) {
+      result.push({
+        kind: "reveal",
+        partnerAvatarUrl: matchData.partnerAvatarUrl,
+        partnerDisplayName: matchData.partnerDisplayName,
+      });
+    }
+
+    return result;
+  }, [localMessages, isMatched, matchData]);
 
   if (isSearching && !isMatched) {
     return (
@@ -290,11 +402,14 @@ function ChatContent({ matchData, onStart, onCancel, onEnd, onSend, onReveal, in
           You are now chatting with a stranger. Say hi.
         </div>
 
-        {localMessages.map((msg: any, i: number) => {
-          const isLast = i === localMessages.length - 1;
-          const showMilestone = msg.isMine && [5, 10, 20, 50].includes(matchData.myMessageCount) && isLast;
-          // Note: realistically, milestone toasts might be handled better via generic toaster, but inline is fine too.
-
+        {augmentedMessages.map((item, i) => {
+          if (item.kind === "milestone") {
+            return <MilestoneCard key={`milestone-${item.milestone}`} item={item} />;
+          }
+          if (item.kind === "reveal") {
+            return <RevealCard key="reveal-card" item={item} />;
+          }
+          const msg = item.data;
           return (
             <div key={msg.id} className={`flex flex-col ${msg.isMine ? 'items-end' : 'items-start'}`}>
               <div className={`max-w-[75%] px-4 py-3 rounded-2xl ${
@@ -307,13 +422,6 @@ function ChatContent({ matchData, onStart, onCancel, onEnd, onSend, onReveal, in
               <span className="text-[10px] text-zinc-600 mt-1 px-1">
                 {format(new Date(msg.createdAt), 'HH:mm')}
               </span>
-
-              {showMilestone && (
-                <div className="mt-4 mb-2 text-center text-xs text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 py-1.5 px-4 rounded-full flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
-                  <Unlock size={12} />
-                  Your face is getting clearer...
-                </div>
-              )}
             </div>
           );
         })}
