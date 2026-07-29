@@ -97,11 +97,11 @@ export default function ChatPage() {
   };
 
   const handleEndChat = () => {
-    if (!confirm("Are you sure you want to end this chat?")) return;
     endChat.mutate(undefined, {
       onSuccess: () => {
         setLocalMessages([]);
         queryClient.invalidateQueries({ queryKey: getGetCurrentMatchQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListMessagesQueryKey() });
       }
     });
   };
@@ -168,7 +168,7 @@ export default function ChatPage() {
   // Let's use a local state to bridge the gap, or just check if startSearch has fired.
 
   // Let's import useGetMe to accurately read isSearching.
-  return <ChatContent matchData={matchData} onStart={handleStartSearch} onCancel={handleCancelSearch} onEnd={handleEndChat} onSend={handleSend} onReveal={handleReveal} inputContent={inputContent} setInputContent={setInputContent} localMessages={localMessages} messagesEndRef={messagesEndRef} calculateBlur={calculateBlur} />;
+  return <ChatContent matchData={matchData} onStart={handleStartSearch} onCancel={handleCancelSearch} onEnd={handleEndChat} endChatPending={endChat.isPending} onSend={handleSend} onReveal={handleReveal} inputContent={inputContent} setInputContent={setInputContent} localMessages={localMessages} messagesEndRef={messagesEndRef} calculateBlur={calculateBlur} />;
 }
 
 import { useGetMe } from "@workspace/api-client-react";
@@ -250,10 +250,27 @@ function RevealCard({ item }: { item: Extract<AugmentedItem, { kind: "reveal" }>
   );
 }
 
-function ChatContent({ matchData, onStart, onCancel, onEnd, onSend, onReveal, inputContent, setInputContent, localMessages, messagesEndRef, calculateBlur }: any) {
+function ChatContent({ matchData, onStart, onCancel, onEnd, endChatPending, onSend, onReveal, inputContent, setInputContent, localMessages, messagesEndRef, calculateBlur }: any) {
   const { data: me } = useGetMe();
   const isSearching = me?.isSearching;
   const isMatched = matchData && matchData.status === MatchStateStatus.active;
+
+  // Two-tap end confirmation — avoids window.confirm() which is blocked in iframes
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEndPress = () => {
+    if (confirmingEnd) {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+      setConfirmingEnd(false);
+      onEnd();
+    } else {
+      setConfirmingEnd(true);
+      confirmTimerRef.current = setTimeout(() => setConfirmingEnd(false), 3000);
+    }
+  };
+
+  useEffect(() => () => { if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current); }, []);
 
   // Build augmented timeline with milestone avatar cards injected after the Nth sent message
   const augmentedMessages = useMemo<AugmentedItem[]>(() => {
@@ -389,8 +406,22 @@ function ChatContent({ matchData, onStart, onCancel, onEnd, onSend, onReveal, in
             </button>
           )}
           
-          <button onClick={onEnd} className="text-zinc-500 hover:text-red-400 p-2 rounded-full transition-colors bg-zinc-900 border border-zinc-800 hover:bg-red-500/10 hover:border-red-500/30">
-            <X size={18} />
+          <button
+            onClick={handleEndPress}
+            disabled={endChatPending}
+            title={confirmingEnd ? "Tap again to confirm" : "End chat"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+              confirmingEnd
+                ? 'bg-red-500/20 border-red-500/50 text-red-300 animate-pulse'
+                : 'text-zinc-500 bg-zinc-900 border-zinc-800 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30'
+            }`}
+          >
+            {endChatPending
+              ? <Loader2 size={14} className="animate-spin" />
+              : <X size={14} />}
+            <span className="hidden sm:inline">
+              {confirmingEnd ? 'Confirm end?' : 'End'}
+            </span>
           </button>
         </div>
       </div>
