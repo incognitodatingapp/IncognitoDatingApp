@@ -34,9 +34,9 @@ export default function HomePage() {
         </div>
         
         <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-6 leading-none">
-          "YOURSELF" <br/>
+          INCOGNITO <br/>
           <span className="bg-clip-text text-transparent bg-gradient-to-br from-purple-400 via-purple-600 to-cyan-500 drop-shadow-[0_0_25px_rgba(139,92,246,0.4)]">
-           "REVEALING YOURSELF"
+           DATING
           </span>
         </h1>
         
