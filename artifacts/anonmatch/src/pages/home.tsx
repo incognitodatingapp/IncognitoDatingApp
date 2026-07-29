@@ -33,12 +33,16 @@ export default function HomePage() {
           <span>The underground of connection</span>
         </div>
         
-        <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-6 leading-none">
-          INCOGNITO <br/>
-          <span className="bg-clip-text text-transparent bg-gradient-to-br from-purple-400 via-purple-600 to-cyan-500 drop-shadow-[0_0_25px_rgba(139,92,246,0.4)]">
-           DATING
-          </span>
-        </h1>
+        <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-6 leading-none">
+  INCOGNITO <br/>
+  <span className="filter drop-shadow-[0_0_25px_rgba(139,92,246,0.4)]">
+<span 
+  className="bg-clip-text text-transparent bg-gradient-to-br from-purple-400 via-purple-600 to-cyan-500"
+  style={{ filter: 'drop-shadow(0 0 25px rgba(139, 92, 246, 0.4))' }}
+>
+  DATING
+</span>
+</h1>
         
         <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mb-12 font-medium">
           No faces. No names. Just raw connection. Talk to strangers and watch the blur fade as trust builds, one message at a time.
