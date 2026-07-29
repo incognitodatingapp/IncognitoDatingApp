@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from '@clerk/react';
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, UserButton } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect, Link } from 'wouter';
@@ -164,7 +164,7 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
           
-          <div className="flex md:flex-col overflow-x-auto md:overflow-visible px-4 md:px-3 pb-4 md:pb-0 gap-2 hide-scrollbar">
+          <div className="flex md:flex-col overflow-x-auto md:overflow-visible px-4 md:px-3 pb-4 md:pb-0 gap-2 hide-scrollbar md:flex-1">
             {navItems.map((item) => {
               const active = location === item.href;
               const Icon = item.icon;
@@ -183,6 +183,22 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+
+            {/* Account button — mobile: inline at end of strip; desktop: pushed to bottom */}
+            <div className="md:mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 whitespace-nowrap shrink-0">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-6 h-6 ring-1 ring-zinc-700 hover:ring-purple-500 transition-all',
+                    userButtonPopoverCard: 'bg-[#111118] border border-[#1e1e26] shadow-2xl shadow-purple-900/10',
+                    userButtonPopoverActionButton: 'text-zinc-300 hover:bg-zinc-800/60 hover:text-white',
+                    userButtonPopoverActionButtonText: 'text-zinc-300',
+                    userButtonPopoverFooter: 'hidden',
+                  },
+                }}
+              />
+              <span className="hidden md:inline text-sm font-medium">Account</span>
+            </div>
           </div>
         </nav>
         
