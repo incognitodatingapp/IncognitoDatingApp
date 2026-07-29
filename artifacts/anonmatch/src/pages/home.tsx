@@ -13,7 +13,7 @@ export default function HomePage() {
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="AnonMatch" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
           <span className="font-bold tracking-widest text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
-            AnonMatch
+            Incognito
           </span>
         </div>
         <div className="flex gap-4">
