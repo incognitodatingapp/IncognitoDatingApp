@@ -34,12 +34,12 @@ export default function HomePage() {
         </div>
         
         <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-6 leading-none">
-          BE YOURSELF <br/>
+          INCOGNITO <br/>
           <span 
             className="bg-clip-text text-transparent bg-gradient-to-br from-purple-400 via-purple-600 to-cyan-500"
             style={{ filter: 'drop-shadow(0 0 25px rgba(139, 92, 246, 0.4))' }}
           >
-            WITHOUT REVEALING YOURSELF
+            DATING
           </span>
         </h1>
         
