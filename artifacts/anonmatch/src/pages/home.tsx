@@ -11,7 +11,7 @@ export default function HomePage() {
       {/* Navbar */}
       <header className="px-6 py-8 flex items-center justify-between z-10 max-w-7xl w-full mx-auto">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="AnonMatch" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+          <img src="/logo.svg" alt="Incognito" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
           <span className="font-bold tracking-widest text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">
             AnonMatch
           </span>
