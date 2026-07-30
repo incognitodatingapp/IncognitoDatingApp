@@ -55,9 +55,7 @@ app.use(
 // Serve frontend static files in production with absolute fallback logging
 const possiblePaths = [
   path.resolve(process.cwd(), "artifacts/anonmatch/dist"),
-  path.resolve(__dirname, "../artifacts/anonmatch/dist"),
-  path.resolve(__dirname, "../../artifacts/anonmatch/dist"),
-  path.resolve(__dirname, "../dist")
+  path.resolve(process.cwd(), "dist")
 ];
 
 console.log("Checking possible client dist paths:");
