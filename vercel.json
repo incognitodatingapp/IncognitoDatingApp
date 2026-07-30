@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://incognitodatingapp.onrender.com/api/:path*"
-    }
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
