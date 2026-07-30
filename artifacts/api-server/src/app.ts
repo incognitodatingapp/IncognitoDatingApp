@@ -52,23 +52,25 @@ app.use(
   })),
 );
 
-// Serve uploaded files
-const uploadDir = "/tmp/uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-app.use("/api/uploads", express.static(uploadDir));
+// Serve frontend static files in production by checking multiple potential paths
+const possiblePaths = [
+  path.resolve(__dirname, "../../../client/dist"),
+  path.resolve(__dirname, "../../client/dist"),
+  path.resolve(__dirname, "../client/dist"),
+  path.resolve(process.cwd(), "client/dist"),
+  path.resolve(process.cwd(), "artifacts/client/dist")
+];
 
-// API Router
-app.use("/api", router);
+const clientDistPath = possiblePaths.find(p => fs.existsSync(p));
 
-// Serve frontend static files in production
-const clientDistPath = path.resolve(__dirname, "../../../client/dist");
-if (fs.existsSync(clientDistPath)) {
+if (clientDistPath) {
+  console.log(`Serving static files from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
   app.get("*", (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
+} else {
+  console.log("Warning: Client dist directory not found in any expected location.");
 }
 
 export default app;
