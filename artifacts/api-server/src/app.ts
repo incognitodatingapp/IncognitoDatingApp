@@ -52,25 +52,31 @@ app.use(
   })),
 );
 
-// Serve frontend static files in production by checking multiple potential paths
+// Serve frontend static files in production with absolute fallback logging
 const possiblePaths = [
   path.resolve(__dirname, "../../../client/dist"),
   path.resolve(__dirname, "../../client/dist"),
   path.resolve(__dirname, "../client/dist"),
   path.resolve(process.cwd(), "client/dist"),
-  path.resolve(process.cwd(), "artifacts/client/dist")
+  path.resolve(process.cwd(), "artifacts/client/dist"),
+  path.resolve(process.cwd(), "dist/client")
 ];
+
+console.log("Checking possible client dist paths:");
+possiblePaths.forEach(p => {
+  console.log(`- ${p} (Exists: ${fs.existsSync(p)})`);
+});
 
 const clientDistPath = possiblePaths.find(p => fs.existsSync(p));
 
 if (clientDistPath) {
-  console.log(`Serving static files from: ${clientDistPath}`);
+  console.log(`>>> SUCCESS: Serving static files from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
   app.get("*", (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 } else {
-  console.log("Warning: Client dist directory not found in any expected location.");
+  console.log(">>> ERROR: Client dist directory not found in any checked location!");
 }
 
 export default app;
