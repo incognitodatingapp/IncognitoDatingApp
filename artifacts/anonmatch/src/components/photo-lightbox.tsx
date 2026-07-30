@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, ImageOff } from "lucide-react";
 
 interface PhotoLightboxProps {
   src: string;
@@ -8,6 +8,8 @@ interface PhotoLightboxProps {
 }
 
 export function PhotoLightbox({ src, alt = "Photo", onClose }: PhotoLightboxProps) {
+  const [hasError, setHasError] = useState(false);
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -28,15 +30,26 @@ export function PhotoLightbox({ src, alt = "Photo", onClose }: PhotoLightboxProp
         <X size={18} />
       </button>
 
-      {/* Image */}
-      <img
-        src={src}
-        alt={alt}
-        className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl shadow-black animate-in zoom-in-95 duration-200 select-none"
-        style={{ maxHeight: "calc(100dvh - 4rem)", maxWidth: "calc(100vw - 4rem)" }}
-        onClick={(e) => e.stopPropagation()}
-        draggable={false}
-      />
+      {/* Image or Error Fallback */}
+      {hasError || !src ? (
+        <div 
+          className="flex flex-col items-center justify-center p-8 bg-zinc-900 border border-zinc-800 rounded-2xl text-zinc-400 gap-3 select-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ImageOff size={48} className="text-zinc-500" />
+          <p className="text-sm font-medium">Image could not be loaded</p>
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setHasError(true)}
+          className="max-w-full max-h-full rounded-2xl object-contain shadow-2xl shadow-black animate-in zoom-in-95 duration-200 select-none"
+          style={{ maxHeight: "calc(100dvh - 4rem)", maxWidth: "calc(100vw - 4rem)" }}
+          onClick={(e) => e.stopPropagation()}
+          draggable={false}
+        />
+      )}
     </div>
   );
 }
