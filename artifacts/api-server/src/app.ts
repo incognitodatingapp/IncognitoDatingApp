@@ -73,7 +73,9 @@ const clientDistPath = possiblePaths.find(p => fs.existsSync(p));
 if (clientDistPath) {
   console.log(`>>> SUCCESS: Serving static files from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
-  app.get("*", (req, res) => {
+  
+  // Safe wildcard route using regex to prevent the PathError crash
+  app.get(/.*/, (req, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"));
   });
 } else {
