@@ -22,7 +22,8 @@ export function useWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // The API server is mounted at /api, but the websocket is usually at /api/ws or just /ws. 
     // Wait, the prompt says "Connect to /ws for real-time updates"
-    const wsUrl = `${protocol}//${window.location.host}${import.meta.env.BASE_URL}api/ws`.replace('//api/ws', '/api/ws');
+    // Use your Render backend URL for WebSockets
+const wsUrl = 'wss://incognitodatingapp.onrender.com/api/ws';
 
     const ws = new WebSocket(wsUrl);
 
