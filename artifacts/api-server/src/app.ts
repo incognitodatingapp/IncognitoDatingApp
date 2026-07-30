@@ -52,13 +52,11 @@ app.use(
   })),
 );
 
-// Serve uploaded files
-const uploadDir = "/tmp/uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Serve frontend static files in production
+const clientDistPath = path.resolve(__dirname, "../../client/dist"); // Adjust path if your client build directory is located elsewhere
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
 }
-app.use("/api/uploads", express.static(uploadDir));
-
-app.use("/api", router);
-
-export default app;
