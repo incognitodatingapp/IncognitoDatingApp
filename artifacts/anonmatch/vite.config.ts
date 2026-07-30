@@ -60,11 +60,11 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   root: path.resolve(import.meta.dirname),
- build: {
-    outDir: path.resolve(import.meta.dirname, 'dist/public'),
-    emptyOutDir: true,
-    sourcemap: false, // Add this line here
-  },
+build: {
+  outDir: path.resolve(import.meta.dirname, 'dist'),
+  emptyOutDir: true,
+  sourcemap: false,
+},
   server: {
     port,
     strictPort: true,
