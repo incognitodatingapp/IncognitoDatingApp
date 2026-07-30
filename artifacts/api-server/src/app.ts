@@ -54,6 +54,7 @@ app.use(
 
 // Serve frontend static files in production with absolute fallback logging
 const possiblePaths = [
+  path.resolve(__dirname, "../dist"),
   path.resolve(__dirname, "../../../client/dist"),
   path.resolve(__dirname, "../../client/dist"),
   path.resolve(__dirname, "../client/dist"),
