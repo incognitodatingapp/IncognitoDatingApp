@@ -63,7 +63,7 @@ app.use("/api/uploads", express.static(uploadDir));
 app.use("/api", router);
 
 // Serve frontend static files in production
-const clientDistPath = path.resolve(__dirname, "../../client/dist");
+const clientDistPath = path.resolve(__dirname, "../../../client/dist");
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
   app.get("*", (req, res) => {
